@@ -21,12 +21,13 @@ model.forEach((rr) => {
   if (rr.request && rr.request.method) {
     const method = rr.request.method.toLowerCase();
     const path = rr.request.url;
-    const response = JSON.stringify(rr.response.content, null, 2);
-    const output = `app.${method}('${path}', (req, res) => (
-      res.send(
-        ${response}
-      )
-    );\n\n`;
+    const response = JSON.stringify(rr.response.content.text, null, 2);
+    let output = [
+      `app.${method}('${path}', (req, res) => {`,
+      ` res.send(${response});`,
+      `});`,
+    ].join('\n');
+    output += '\n';
     if (isInitialWrite === true) {
       fs.writeFileSync(outputFile, output, 'utf8');
       isInitialWrite = false;
