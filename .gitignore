@@ -3,4 +3,4 @@ local/
 .env*
 .vscode/
 yarn-error.log
-__hars__/*
+__hars__/*.har
