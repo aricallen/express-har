@@ -2,10 +2,22 @@ const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const args = require('minimist')(process.argv);
 
-const harData = JSON.parse(fs.readFileSync('__hars__/localhost.har', { encoding: 'utf8' }));
+const usage = `
+  Usage: node server.js --filename=<har-filename> [--port=<port>]
+`;
+
+if (args.filename === undefined) {
+  console.log(usage);
+  process.exit(1);
+}
+
+const harname = args.filename.endsWith('.har') ? args.filename : `${args.filename}.har`;
+const harData = JSON.parse(fs.readFileSync(`__hars__/${harname}`, { encoding: 'utf8' }));
 
 const app = express();
+app.disable('etag');
 app.use(bodyParser.json());
 app.use(
   session({
@@ -33,8 +45,29 @@ const getResponseData = (method, req) => {
 };
 
 app.get('/api/login', (req, res) => {
-  const data = getResponseData('post', req);
-  res.send(data);
+  if (req.session.isLoggedIn) {
+    const data = getResponseData('post', req);
+    res.send(data);
+  } else {
+    res.status(401);
+    res.send({ errors: [{ reason: 'Not authenticated', message: 'Authentication needed' }] });
+  }
+});
+
+app.post('/api/login', (req, res) => {
+  req.session.isLoggedIn = true;
+  const successLoginEntry = harData.log.entries.find((entry) => {
+    if (
+      entry.request &&
+      entry.request.method.toLowerCase() === 'post' &&
+      entry.request.url.includes('/api/login') &&
+      entry.response.status === 200
+    ) {
+      return true;
+    }
+    return false;
+  });
+  res.send(successLoginEntry.response.content.text);
 });
 
 app.get('/*', (req, res) => {
@@ -57,4 +90,4 @@ app.delete('/*', (req, res) => {
   res.send(data);
 });
 
-app.listen(4242);
+app.listen(args.port || 4242);
