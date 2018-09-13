@@ -27,6 +27,21 @@ app.use(
   })
 );
 
+const getSuccessLoginEntry = () => {
+  const successLoginEntry = harData.log.entries.find((entry) => {
+    if (
+      entry.request &&
+      entry.request.method.toLowerCase() === 'post' &&
+      entry.request.url.includes('/api/login') &&
+      entry.response.status === 200
+    ) {
+      return true;
+    }
+    return false;
+  });
+  return successLoginEntry;
+}
+
 const getResponseData = (method, req) => {
   const endpointEntry = harData.log.entries.find((entry) => {
     if (
@@ -46,8 +61,8 @@ const getResponseData = (method, req) => {
 
 app.get('/api/login', (req, res) => {
   if (req.session.isLoggedIn) {
-    const data = getResponseData('post', req);
-    res.send(data);
+    const successLoginEntry = getSuccessLoginEntry();
+    res.send(successLoginEntry.response.content.text);
   } else {
     res.status(401);
     res.send({ errors: [{ reason: 'Not authenticated', message: 'Authentication needed' }] });
@@ -56,17 +71,7 @@ app.get('/api/login', (req, res) => {
 
 app.post('/api/login', (req, res) => {
   req.session.isLoggedIn = true;
-  const successLoginEntry = harData.log.entries.find((entry) => {
-    if (
-      entry.request &&
-      entry.request.method.toLowerCase() === 'post' &&
-      entry.request.url.includes('/api/login') &&
-      entry.response.status === 200
-    ) {
-      return true;
-    }
-    return false;
-  });
+  const successLoginEntry = getSuccessLoginEntry();
   res.send(successLoginEntry.response.content.text);
 });
 
