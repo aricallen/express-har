@@ -4,3 +4,5 @@ local/
 .vscode/
 yarn-error.log
 __hars__/*.har
+stubs/
+custom-endpoints.js

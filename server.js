@@ -3,6 +3,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const args = require('minimist')(process.argv);
+const HookupCustomEndpoints = require('./custom-endpoints.js');
 
 const usage = `
   Usage: node server.js --filename=<har-filename> [--port=<port>]
@@ -22,25 +23,10 @@ app.use(bodyParser.json());
 app.use(
   session({
     secret: 'abc123',
-    cookie: { maxAge: 60000 },
+    cookie: {},
     saveUninitialized: true,
   })
 );
-
-const getSuccessLoginEntry = () => {
-  const successLoginEntry = harData.log.entries.find((entry) => {
-    if (
-      entry.request &&
-      entry.request.method.toLowerCase() === 'post' &&
-      entry.request.url.includes('/api/login') &&
-      entry.response.status === 200
-    ) {
-      return true;
-    }
-    return false;
-  });
-  return successLoginEntry;
-}
 
 const getResponseData = (method, req) => {
   const endpointEntry = harData.log.entries.find((entry) => {
@@ -59,21 +45,7 @@ const getResponseData = (method, req) => {
   return {};
 };
 
-app.get('/api/login', (req, res) => {
-  if (req.session.isLoggedIn) {
-    const successLoginEntry = getSuccessLoginEntry();
-    res.send(successLoginEntry.response.content.text);
-  } else {
-    res.status(401);
-    res.send({ errors: [{ reason: 'Not authenticated', message: 'Authentication needed' }] });
-  }
-});
-
-app.post('/api/login', (req, res) => {
-  req.session.isLoggedIn = true;
-  const successLoginEntry = getSuccessLoginEntry();
-  res.send(successLoginEntry.response.content.text);
-});
+HookupCustomEndpoints(app, harData);
 
 app.get('/*', (req, res) => {
   const data = getResponseData('get', req);
@@ -82,17 +54,17 @@ app.get('/*', (req, res) => {
 
 app.post('/*', (req, res) => {
   const data = getResponseData('post', req);
-  res.send(data);
+  res.send(data || req.body);
 });
 
 app.put('/*', (req, res) => {
   const data = getResponseData('put', req);
-  res.send(data);
+  res.send(data || req.body);
 });
 
 app.delete('/*', (req, res) => {
   const data = getResponseData('delete', req);
-  res.send(data);
+  res.send(data || req.body);
 });
 
 app.listen(args.port || 4242);

@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js --filename=localhost.har"
   },
   "devDependencies": {
     "eslint": "*",
@@ -29,6 +29,7 @@
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
     "express-session": "^1.15.6",
+    "lowdb": "^1.0.0",
     "minimist": "^1.2.0"
   }
 }
