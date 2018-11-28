@@ -1,6 +1,6 @@
 {
-  "name": "mock-backend",
-  "version": "0.0.1",
+  "name": "express-har",
+  "version": "1.0.0",
   "description": "",
   "main": "server.js",
   "scripts": {
