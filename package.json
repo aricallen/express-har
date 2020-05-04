@@ -30,6 +30,6 @@
     "express": "^4.16.3",
     "express-session": "^1.15.6",
     "lowdb": "^1.0.0",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.3"
   }
 }
